@@ -1,0 +1,16 @@
+# Rebuilt inside the image
+node_modules/
+.next/
+*.tsbuildinfo
+next-env.d.ts
+
+# Never bake credentials into the image; pass them at runtime
+.env
+.env*.local
+
+# Not needed to build or run
+test/
+vitest.config.mts
+README.md
+Dockerfile
+.dockerignore

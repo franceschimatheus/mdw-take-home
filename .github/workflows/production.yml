@@ -1,0 +1,81 @@
+name: production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: production
+
+jobs:
+  # Lint, test and build run in parallel.
+  lint:
+    name: Lint, format and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-production
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm type-check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-production
+      - run: pnpm test
+
+  build:
+    name: Build (Next.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-production
+      - run: pnpm build
+
+#   # Docker image: disabled for now. Uncomment to build it after the three checks
+  # (and publish it to GHCR on pushes to main).
+  # image:
+  #     name: Docker image
+  #     needs: [lint, test, build]
+  #     runs-on: ubuntu-latest
+  #     permissions:
+  #       contents: read
+  #       packages: write
+  #     steps:
+  #       - uses: actions/checkout@v5
+  # 
+  #       - uses: docker/setup-buildx-action@v3
+  # 
+  #       - uses: docker/metadata-action@v5
+  #         id: meta
+  #         with:
+  #           images: ghcr.io/${{ github.repository }}
+  #           tags: |
+  #             type=sha
+  #             type=raw,value=latest,enable={{is_default_branch}}
+  # 
+  #       # Pull requests only build the image; pushes to main also publish it.
+  #       - if: github.event_name != 'pull_request'
+  #         uses: docker/login-action@v3
+  #         with:
+  #           registry: ghcr.io
+  #           username: ${{ github.actor }}
+  #           password: ${{ secrets.GITHUB_TOKEN }}
+  # 
+  #       - uses: docker/build-push-action@v6
+  #         with:
+  #           context: production
+  #           push: ${{ github.event_name != 'pull_request' }}
+  #           tags: ${{ steps.meta.outputs.tags }}
+  #           labels: ${{ steps.meta.outputs.labels }}
+  #           cache-from: type=gha
+  #           cache-to: type=gha,mode=max

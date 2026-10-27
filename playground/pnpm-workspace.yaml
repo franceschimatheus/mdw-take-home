@@ -1,0 +1,12 @@
+# inngest-cli downloads the Inngest Dev Server binary; esbuild (used by the
+# react-email preview) installs its native binary. unrs-resolver (ESLint import
+# resolution) gets its binary as an optional dependency; its script is only a fallback.
+allowBuilds:
+  esbuild: true
+  inngest-cli: true
+  protobufjs: true
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - '@hookform/resolvers@6.0.1'
+  - react-email@6.11.4
+  - '@react-email/ui@6.11.4'

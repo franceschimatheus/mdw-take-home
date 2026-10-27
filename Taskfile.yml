@@ -1,0 +1,117 @@
+version: '3'
+
+tasks:
+  default:
+    desc: Lists all available tasks
+    cmds:
+      - task --list
+
+  install:
+    desc: Installs dependencies in both apps (also downloads the Inngest Dev Server binary)
+    cmds:
+      - pnpm --dir production install
+      - pnpm --dir playground install
+
+  dev:
+    desc: Installs and runs the production app (localhost:3000) and the Inngest Dev Server (localhost:8288)
+    cmds:
+      - task: install:app
+        vars: { DIR: production }
+      - task: run
+        vars: { DIR: production }
+
+  dev:playground:
+    desc: Installs and runs the playground app (live progress + dev tools) and the Inngest Dev Server
+    cmds:
+      - task: install:app
+        vars: { DIR: playground }
+      - task: run
+        vars: { DIR: playground }
+
+  stop:
+    desc: Kills leftover dev servers (Next.js on :3000, Inngest Dev Server on :8288)
+    silent: true
+    # `ss` on Linux (lsof misses Next's IPv6 listener on WSL), lsof on macOS.
+    # `env kill` because Task's built-in shell has no kill.
+    cmds:
+      - |
+        listeners() {
+          if command -v ss >/dev/null; then
+            ss -ltnpH '( sport = :3000 or sport = :8288 )' | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
+          else
+            lsof -t -i tcp:3000 -i tcp:8288 -sTCP:LISTEN || true
+          fi
+        }
+        pids=$(listeners)
+        if [ -z "$pids" ]; then echo "Nothing listening on :3000 or :8288"; exit 0; fi
+        echo "Stopping $(echo $pids)"
+        env kill $pids
+        sleep 2
+        pids=$(listeners)
+        if [ -n "$pids" ]; then echo "Force-killing $(echo $pids)"; env kill -9 $pids; fi
+        echo "Stopped"
+
+  dev:email:
+    desc: Runs the React Email preview server (http://localhost:3001)
+    dir: production
+    cmds:
+      - pnpm email:dev
+
+  test:
+    desc: Runs unit tests (production; the playground has none)
+    dir: production
+    cmds:
+      - pnpm test
+
+  lint:
+    desc: Lints both apps and checks their formatting
+    cmds:
+      - pnpm --dir production lint && pnpm --dir production format:check
+      - pnpm --dir playground lint && pnpm --dir playground format:check
+
+  format:
+    desc: Applies ESLint auto-fixes (import order, type imports), then formats both apps
+    cmds:
+      - pnpm --dir production lint:fix && pnpm --dir production format
+      - pnpm --dir playground lint:fix && pnpm --dir playground format
+
+  check:
+    desc: Lints, type-checks, tests and builds production; lints, type-checks and builds the playground
+    cmds:
+      - task: lint
+      - pnpm --dir production type-check && pnpm --dir production test && pnpm --dir production build
+      - pnpm --dir playground type-check && pnpm --dir playground build
+
+  # Skipped when the lockfile hasn't changed since the last install.
+  install:app:
+    internal: true
+    # One checksum per app, so production and playground don't overwrite each other's.
+    label: 'install:app:{{.DIR}}'
+    dir: '{{.DIR}}'
+    sources:
+      - package.json
+      - pnpm-lock.yaml
+    generates:
+      - node_modules/.modules.yaml
+    cmds:
+      - pnpm install
+
+  run:
+    internal: true
+    deps:
+      - task: next
+        vars: { DIR: '{{.DIR}}' }
+      - task: inngest
+        vars: { DIR: '{{.DIR}}' }
+
+  next:
+    internal: true
+    dir: '{{.DIR}}'
+    cmds:
+      - pnpm dev
+
+  inngest:
+    internal: true
+    dir: '{{.DIR}}'
+    cmds:
+      - pnpm dev:inngest
