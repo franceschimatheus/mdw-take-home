@@ -8,6 +8,7 @@ import {
   type WatchMovieResponseType,
 } from '@/features/movies/handler/http.contract';
 import { queueMovieRequest } from '@/features/movies/queue';
+import { lockedRecipientError } from '@/features/movies/recipient-lock';
 
 export async function handleWatchMovie(request: Request): Promise<Response> {
   let body: unknown;
@@ -22,6 +23,17 @@ export async function handleWatchMovie(request: Request): Promise<Response> {
     return Response.json(
       { error: 'Invalid input', fieldErrors: z.flattenError(parsed.error).fieldErrors } satisfies ApiErrorType,
       { status: 400 },
+    );
+  }
+
+  const recipientError = lockedRecipientError(parsed.data.recipient_email);
+  if (recipientError) {
+    return Response.json(
+      {
+        error: 'This app can only email the configured address.',
+        fieldErrors: { recipient_email: [recipientError] },
+      } satisfies ApiErrorType,
+      { status: 403 },
     );
   }
 

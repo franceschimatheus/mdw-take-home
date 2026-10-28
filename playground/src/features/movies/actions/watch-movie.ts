@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { MovieWatchedType } from '@/features/movies/domain/movie';
 import { watchMovieRequestSchema, type WatchMovieResponseType } from '@/features/movies/handler/http.contract';
 import { queueMovieRequest } from '@/features/movies/queue';
+import { lockedRecipientError } from '@/features/movies/recipient-lock';
 
 type FormValuesType = Pick<MovieWatchedType, 'movie_title' | 'recipient_email'>;
 
@@ -39,6 +40,11 @@ export async function watchMovieAction(
   const parsed = watchMovieRequestSchema.safeParse({ ...values, dev: parseDev(formData.get('dev')) });
   if (!parsed.success) {
     return { status: 'invalid', values, fieldErrors: z.flattenError(parsed.error).fieldErrors };
+  }
+
+  const recipientError = lockedRecipientError(parsed.data.recipient_email);
+  if (recipientError) {
+    return { status: 'invalid', values, fieldErrors: { recipient_email: [recipientError] } };
   }
 
   try {

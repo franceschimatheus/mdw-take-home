@@ -3,12 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { handleWatchMovie } from '@/features/movies/handler/http';
 import { inngest } from '@/lib/inngest/client';
 
+const env = vi.hoisted(() => ({ RESEND_OWNER_EMAIL: undefined as string | undefined }));
+vi.mock('@/config/env', () => ({ getEnv: () => env }));
+
 const send = vi.spyOn(inngest, 'send');
 const consoleError = vi.spyOn(console, 'error');
 
 afterEach(() => {
   send.mockReset();
   consoleError.mockReset();
+  env.RESEND_OWNER_EMAIL = undefined;
 });
 
 function post(body: unknown): Request {
@@ -60,6 +64,28 @@ describe('handleWatchMovie', () => {
       },
     });
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it('rejects other recipients with 403 when the recipient is locked', async () => {
+    env.RESEND_OWNER_EMAIL = 'owner@example.com';
+
+    const response = await handleWatchMovie(post(valid));
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: 'This app can only email the configured address.',
+      fieldErrors: { recipient_email: ['Only owner@example.com can receive emails'] },
+    });
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('accepts the locked recipient regardless of case', async () => {
+    env.RESEND_OWNER_EMAIL = 'Owner@Example.com';
+    send.mockResolvedValue({ ids: ['evt_1'] });
+
+    const response = await handleWatchMovie(post({ ...valid, recipient_email: 'owner@example.com' }));
+
+    expect(response.status).toBe(202);
   });
 
   it('answers 502 when the event cannot be published', async () => {

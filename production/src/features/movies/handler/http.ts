@@ -2,6 +2,7 @@ import 'server-only';
 
 import { z } from 'zod';
 
+import { getEnv } from '@/config/env';
 import {
   type ApiErrorType,
   watchMovieRequestSchema,
@@ -22,6 +23,19 @@ export async function handleWatchMovie(request: Request): Promise<Response> {
     return Response.json(
       { error: 'Invalid input', fieldErrors: z.flattenError(parsed.error).fieldErrors } satisfies ApiErrorType,
       { status: 400 },
+    );
+  }
+
+  // The form only makes the field read-only; enforce the lock here so the endpoint
+  // can't be used to email arbitrary addresses.
+  const { RESEND_OWNER_EMAIL: lockedRecipient } = getEnv();
+  if (lockedRecipient && parsed.data.recipient_email.toLowerCase() !== lockedRecipient.toLowerCase()) {
+    return Response.json(
+      {
+        error: 'This app can only email the configured address.',
+        fieldErrors: { recipient_email: [`Only ${lockedRecipient} can receive emails`] },
+      } satisfies ApiErrorType,
+      { status: 403 },
     );
   }
 

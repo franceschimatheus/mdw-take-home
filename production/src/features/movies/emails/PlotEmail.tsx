@@ -25,7 +25,7 @@ export function PlotEmail({ title, posterUrl, details, rating, director, plot }:
         <Head />
         <Preview>{`You just watched ${title}. Here's the plot.`}</Preview>
         <Body className="m-0 bg-zinc-100 py-10 font-sans">
-          <Container className="rounded-2xl mx-auto max-w-140 border border-solid border-zinc-200 bg-white p-8">
+          <Container className="mx-auto max-w-140 rounded-2xl border border-solid border-zinc-200 bg-white p-8">
             <Text className="m-0 text-xs font-semibold tracking-widest text-indigo-600 uppercase">
               You just watched
             </Text>

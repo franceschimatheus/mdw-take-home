@@ -77,7 +77,7 @@ cp .env.example .env.local
 Fill in `OMDB_API_KEY`, `RESEND_API_KEY`, `EMAIL_FROM` and keep
 `INNGEST_DEV=1` locally. Optional `RESEND_OWNER_EMAIL` locks the form's email
 to the Resend account owner (the only address Resend delivers to without a
-verified domain).
+verified domain); `/api/watch-movie` rejects any other recipient with 403.
 
 Run `task dev` from the repo root (or `pnpm dev` + `pnpm dev:inngest`), open
 <http://localhost:3000>, and follow runs at <http://localhost:8288>. Or send
