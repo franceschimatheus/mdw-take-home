@@ -1,0 +1,8 @@
+# LF everywhere, matching .editorconfig and Prettier. Without this, Git on Windows
+# (core.autocrlf=true) checks files out as CRLF and `format:check` fails.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
