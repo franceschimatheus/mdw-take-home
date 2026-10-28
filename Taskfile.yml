@@ -17,6 +17,8 @@ tasks:
     cmds:
       - task: install:app
         vars: { DIR: production }
+      - task: banner
+        vars: { DIR: production }
       - task: run
         vars: { DIR: production }
 
@@ -25,6 +27,8 @@ tasks:
     cmds:
       - task: install:app
         vars: { DIR: playground }
+      - task: banner
+        vars: { DIR: playground }
       - task: run
         vars: { DIR: playground }
 
@@ -32,24 +36,33 @@ tasks:
     desc: Kills leftover dev servers (Next.js on :3000, Inngest Dev Server on :8288)
     silent: true
     # `ss` on Linux (lsof misses Next's IPv6 listener on WSL), lsof on macOS.
-    # `env kill` because Task's built-in shell has no kill.
+    # `env kill` because Task's built-in shell has no kill. Windows uses PowerShell instead.
     cmds:
-      - |
-        listeners() {
-          if command -v ss >/dev/null; then
-            ss -ltnpH '( sport = :3000 or sport = :8288 )' | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
-          else
-            lsof -t -i tcp:3000 -i tcp:8288 -sTCP:LISTEN || true
-          fi
-        }
-        pids=$(listeners)
-        if [ -z "$pids" ]; then echo "Nothing listening on :3000 or :8288"; exit 0; fi
-        echo "Stopping $(echo $pids)"
-        env kill $pids
-        sleep 2
-        pids=$(listeners)
-        if [ -n "$pids" ]; then echo "Force-killing $(echo $pids)"; env kill -9 $pids; fi
-        echo "Stopped"
+      - platforms: [windows]
+        cmd: >-
+          powershell -NoProfile -Command '
+          $p = Get-NetTCPConnection -LocalPort 3000,8288 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique;
+          if (-not $p) { "Nothing listening on :3000 or :8288"; exit 0 };
+          "Stopping $p";
+          Stop-Process -Id $p -Force;
+          "Stopped"'
+      - platforms: [linux, darwin]
+        cmd: |
+          listeners() {
+            if command -v ss >/dev/null; then
+              ss -ltnpH '( sport = :3000 or sport = :8288 )' | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
+            else
+              lsof -t -i tcp:3000 -i tcp:8288 -sTCP:LISTEN || true
+            fi
+          }
+          pids=$(listeners)
+          if [ -z "$pids" ]; then echo "Nothing listening on :3000 or :8288"; exit 0; fi
+          echo "Stopping $(echo $pids)"
+          env kill $pids
+          sleep 2
+          pids=$(listeners)
+          if [ -n "$pids" ]; then echo "Force-killing $(echo $pids)"; env kill -9 $pids; fi
+          echo "Stopped"
 
   dev:email:
     desc: Runs the React Email preview server (http://localhost:3001)
@@ -102,6 +115,12 @@ tasks:
       - node_modules/.modules.yaml
     cmds:
       - pnpm install
+
+  banner:
+    internal: true
+    silent: true
+    cmds:
+      - printf '\n\033[1;36m  > Starting dev servers for %s/\033[0m\n\n    App      \033[4mhttp://localhost:3000\033[0m\n    Inngest  \033[4mhttp://localhost:8288\033[0m\n\n' '{{.DIR}}'
 
   run:
     internal: true

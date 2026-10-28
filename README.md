@@ -11,6 +11,16 @@ movie from OMDb and emails its plot with Resend
 
 ## Running it
 
+Commands below work in bash, zsh and PowerShell 7 (Windows).
+
+First create the env file and fill in `OMDB_API_KEY` and `RESEND_API_KEY`
+(where to get them and what the other variables do:
+[`production/README.md`](production/README.md#setup)):
+
+```bash
+cp production/.env.example production/.env.local
+```
+
 With Nix, `nix develop` at the repo root gives you Node 24, pnpm and
 [Task](https://taskfile.dev):
 
@@ -50,8 +60,7 @@ pnpm dev:inngest
 ```
 
 `pnpm dev` starts Next.js and `pnpm dev:inngest` the Inngest Dev Server; run
-them in separate terminals. Either way, set up `.env.local` first (see
-[`production/README.md`](production/README.md#setup)).
+them in separate terminals.
 
 ### Tasks
 

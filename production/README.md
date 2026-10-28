@@ -84,8 +84,11 @@ Run `task dev` from the repo root (or `pnpm dev` + `pnpm dev:inngest`), open
 the event directly:
 
 ```bash
-curl -X POST http://localhost:8288/e/dev -H 'Content-Type: application/json' -d '{"name":"meadow_api/movie.watched","data":{"movie_title":"The Matrix","recipient_email":"you@example.com"}}'
+curl -X POST http://localhost:8288/e/dev -H 'Content-Type: application/json' -d '{"name":"meadow_api/movie.watched","data":{"movie_title":"The Matrix","recipient_email":"delivered@resend.dev"}}'
 ```
+
+`delivered@resend.dev` is Resend's test inbox and accepts mail from any
+account; swap in your Resend account's email to receive it yourself.
 
 Checks: `pnpm type-check`, `pnpm test`, `pnpm build` (or `task check`).
 
