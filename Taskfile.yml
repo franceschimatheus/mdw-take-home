@@ -75,10 +75,17 @@ tasks:
       - pnpm --dir production lint:fix && pnpm --dir production format
       - pnpm --dir playground lint:fix && pnpm --dir playground format
 
+  audit:
+    desc: Audits both apps' dependencies for known vulnerabilities (moderate severity and above)
+    cmds:
+      - pnpm --dir production audit --audit-level moderate
+      - pnpm --dir playground audit --audit-level moderate
+
   check:
-    desc: Lints, type-checks, tests and builds production; lints, type-checks and builds the playground
+    desc: Lints, audits, type-checks, tests and builds production; lints, audits, type-checks and builds the playground
     cmds:
       - task: lint
+      - task: audit
       - pnpm --dir production type-check && pnpm --dir production test && pnpm --dir production build
       - pnpm --dir playground type-check && pnpm --dir playground build
 

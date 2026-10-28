@@ -14,7 +14,7 @@ defaults:
     working-directory: production
 
 jobs:
-  # Lint, test and build run in parallel.
+  # Lint, audit, test and build run in parallel.
   lint:
     name: Lint, format and types
     runs-on: ubuntu-latest
@@ -24,6 +24,14 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm type-check
+
+  audit:
+    name: Audit dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup-production
+      - run: pnpm audit --audit-level moderate
 
   test:
     name: Test
@@ -41,11 +49,11 @@ jobs:
       - uses: ./.github/actions/setup-production
       - run: pnpm build
 
-#   # Docker image: disabled for now. Uncomment to build it after the three checks
+#   # Docker image: disabled for now. Uncomment to build it after the four checks
   # (and publish it to GHCR on pushes to main).
   # image:
   #     name: Docker image
-  #     needs: [lint, test, build]
+  #     needs: [lint, audit, test, build]
   #     runs-on: ubuntu-latest
   #     permissions:
   #       contents: read

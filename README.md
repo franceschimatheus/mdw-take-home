@@ -9,14 +9,58 @@ movie from OMDb and emails its plot with Resend
 | [**`production/`**](production) | **The submission.** What I'd ship. |
 | [`playground/`](playground) | The same app plus live run progress and fault injection, built to visualize Inngest. |
 
+## Running it
+
+With Nix, `nix develop` at the repo root gives you Node 24, pnpm and
+[Task](https://taskfile.dev):
+
+```bash
+nix develop
+```
+
 ```bash
 task dev
 ```
 
+### Without Nix
+
+If you already have Node ≥ 22.12 and pnpm installed, add Task (or skip it and
+use pnpm directly):
+
+```bash
+pnpm add -g @go-task/cli
+```
+
+```bash
+task dev
+```
+
+Without Task, run the same thing from `production/` (or `playground/`):
+
+```bash
+pnpm install
+```
+
+```bash
+pnpm dev
+```
+
+```bash
+pnpm dev:inngest
+```
+
+`pnpm dev` starts Next.js and `pnpm dev:inngest` the Inngest Dev Server; run
+them in separate terminals. Either way, set up `.env.local` first (see
+[`production/README.md`](production/README.md#setup)).
+
+### Tasks
+
 `task dev` runs `production/`; `task dev:playground` runs `playground/`. Both
 install dependencies when needed, then start Next.js on :3000 and the Inngest
 Dev Server on :8288. If a closed terminal left them running, `task stop` frees
-both ports. Setup and design notes are in
+both ports. `task check` lints, audits dependencies (`pnpm audit`, moderate
+severity and above; also `task audit`), type-checks, tests and builds, like CI.
+Setup and design notes are in
 [`production/README.md`](production/README.md).
 
 ## Assumptions

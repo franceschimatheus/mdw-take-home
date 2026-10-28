@@ -10,3 +10,8 @@ minimumReleaseAgeExclude:
   - '@hookform/resolvers@6.0.1'
   - react-email@6.11.4
   - '@react-email/ui@6.11.4'
+# inngest-cli (latest 1.49.0) still pins adm-zip ^0.5, which has known
+# vulnerabilities. It only unzips the Dev Server binary on Windows, using an API
+# 0.6 keeps. Drop this once inngest-cli depends on adm-zip >=0.6.1.
+overrides:
+  inngest-cli>adm-zip: ^0.6.1
