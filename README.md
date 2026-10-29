@@ -97,8 +97,9 @@ the form). What it adds and why it stays out of the real app:
   delivered; delivery and bounces arrive later via webhooks. Stating which one
   counts (and whether a fallback provider is in scope) turns "maximize the
   chances" into something gradeable instead of open-ended.
-- **Spell out edge cases and share what matters most in the evaluation.**
-  Movie not found (OMDb answers HTTP 200 with `"Response": "False"`),
-  ambiguous titles, invalid emails, duplicate events. With a 2-hour limit,
-  knowing whether tests, deployment or Inngest config weigh most changes what
-  a candidate builds.
+- **Consider specifying how to look up the movie.** OMDb offers both `?t=`
+  (a single title match) and `?s=` (a list of results), and for titles like
+  "Dune" or "The Office" the two can lead to different movies. It might also
+  help to mention that OMDb reports "not found" with an HTTP 200 and
+  `"Response": "False"`. A short line such as "use `t=`; if the movie isn't
+  found, no email is sent" would keep submissions easier to compare.
