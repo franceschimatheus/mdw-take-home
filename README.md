@@ -4,48 +4,52 @@ An Inngest function that reacts to `meadow_api/movie.watched`, fetches the
 movie from OMDb and emails its plot with Resend
 ([exercise](docs/meadow_coding_excersise.txt)).
 
-| Folder | What it is |
-|---|---|
-| [**`production/`**](production) | **The submission.** What I'd ship. |
-| [`playground/`](playground) | The same app plus live run progress and fault injection, built to visualize Inngest. |
+## Run it (Docker only)
 
-## Running it
-
-Commands below work in bash, zsh and PowerShell 7 (Windows).
-
-First create the env file and fill in `OMDB_API_KEY` and `RESEND_API_KEY`
-(where to get them and what the other variables do:
-[`production/README.md`](production/README.md#setup)):
+The only requirement is Docker. Create the env file and fill in
+`OMDB_API_KEY` and `RESEND_API_KEY` (the other variables are explained in
+[`.env.example`](.env.example)):
 
 ```bash
-cp production/.env.example production/.env.local
-```
-
-With Nix, `nix develop` at the repo root gives you Node 24, pnpm and
-[Task](https://taskfile.dev):
-
-```bash
-nix develop
+cp .env.example .env
 ```
 
 ```bash
-task dev
+docker compose up --build
 ```
 
-### Without Nix
-
-If you already have Node ≥ 22.12 and pnpm installed, add Task (or skip it and
-use pnpm directly):
+This starts the app on <http://localhost:3000> and the Inngest Dev Server on
+<http://localhost:8288>, and keeps the terminal attached to their logs. If
+Docker says `port is already allocated`, pick another port for the app:
 
 ```bash
-pnpm add -g @go-task/cli
+APP_PORT=3300 docker compose up --build
 ```
+
+Open <http://localhost:3000>, enter a movie title and an email, and submit.
+Follow the run at <http://localhost:8288/runs>: it should end as
+**Completed**, with the `fetch-movie` and `send-email` steps, and the email
+shows up in your Resend dashboard. A title that doesn't exist fails right away
+without retries.
+
+Without a verified domain, Resend only delivers to your account's own email;
+`delivered@resend.dev` (Resend's test inbox) works from any account.
+
+`Ctrl+C` stops everything. Type-check, lint and unit tests, also in Docker:
 
 ```bash
-task dev
+docker compose run --rm --build test
 ```
 
-Without Task, run the same thing from `production/` (or `playground/`):
+## How it works
+
+How the data flows, the folder structure and the error handling / Inngest
+config are in [`docs/architecture.md`](docs/architecture.md).
+
+## Without Docker
+
+Needs Node ≥ 22.12 and pnpm (`nix develop` provides both, plus
+[Task](https://taskfile.dev)). Keep `INNGEST_DEV=1` in `.env`.
 
 ```bash
 pnpm install
@@ -59,18 +63,18 @@ pnpm dev
 pnpm dev:inngest
 ```
 
-`pnpm dev` starts Next.js and `pnpm dev:inngest` the Inngest Dev Server; run
-them in separate terminals.
+Run the last two in separate terminals, or `task dev` for both. `task check`
+runs lint, audit, type-check, tests and build, like CI; `task --list` shows
+the rest.
 
-### Tasks
+## Playground (optional)
 
-`task dev` runs `production/`; `task dev:playground` runs `playground/`. Both
-install dependencies when needed, then start Next.js on :3000 and the Inngest
-Dev Server on :8288. If a closed terminal left them running, `task stop` frees
-both ports. `task check` lints, audits dependencies (`pnpm audit`, moderate
-severity and above; also `task audit`), type-checks, tests and builds, like CI.
-Setup and design notes are in
-[`production/README.md`](production/README.md).
+[`playground/`](playground) is **not part of the submission**: a copy of this
+app with extra tooling I built to see Inngest work (live run progress via
+Inngest Realtime, fault injection for OMDb/Resend, a Server Action variant of
+the form). What it adds and why it stays out of the real app:
+[`playground/README.md`](playground/README.md). Run it with
+`task dev:playground` after `cp .env playground/.env` (same variables).
 
 ## Assumptions
 
@@ -79,6 +83,8 @@ Setup and design notes are in
 - No dedup across events: the same movie twice sends two emails. Retries never
   duplicate (idempotency key).
 - Without a verified Resend domain, only the account owner receives email.
+  Optional `RESEND_OWNER_EMAIL` locks the form (and `/api/watch-movie`) to
+  that address.
 - Throttle assumes Resend's default rate limit.
 
 ## Recommendations for this exercise

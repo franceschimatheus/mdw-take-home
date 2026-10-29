@@ -1,5 +1,5 @@
-name: Set up production
-description: Installs pnpm, Node and the production app's dependencies (pnpm store cached by lockfile).
+name: Set up
+description: Installs pnpm, Node and the app dependencies (pnpm store cached by lockfile).
 
 runs:
   using: composite
@@ -12,8 +12,7 @@ runs:
       with:
         node-version: 24
         cache: pnpm
-        cache-dependency-path: production/pnpm-lock.yaml
+        cache-dependency-path: pnpm-lock.yaml
 
     - shell: bash
-      working-directory: production
       run: pnpm install --frozen-lockfile

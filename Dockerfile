@@ -22,6 +22,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
+# `docker compose run --rm test`: type-check, lint and unit tests.
+FROM build AS test
+CMD ["sh", "-c", "pnpm type-check && pnpm lint && pnpm test"]
+
 # Runtime: only the standalone server, no pnpm or dev dependencies.
 FROM node:${NODE_VERSION}-alpine AS runner
 WORKDIR /app

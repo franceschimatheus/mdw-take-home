@@ -1,0 +1,26 @@
+# `docker compose up --build`: the app on :3000 and the Inngest Dev Server on :8288.
+# `docker compose run --rm test`: type-check, lint and unit tests.
+services:
+  app:
+    build: .
+    env_file: .env
+    environment:
+      # Send events to (and accept calls from) the Dev Server container instead of Inngest Cloud.
+      INNGEST_DEV: '1'
+      INNGEST_BASE_URL: http://inngest:8288
+    ports:
+      - '${APP_PORT:-3000}:3000'
+
+  inngest:
+    image: inngest/inngest:v1.49.0
+    command: inngest dev -u http://app:3000/api/inngest --no-discovery
+    ports:
+      - '8288:8288'
+    depends_on:
+      - app
+
+  test:
+    build:
+      context: .
+      target: test
+    profiles: [test]

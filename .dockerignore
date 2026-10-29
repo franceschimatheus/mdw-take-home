@@ -8,9 +8,16 @@ next-env.d.ts
 .env
 .env*.local
 
-# Not needed to build or run
-test/
-vitest.config.mts
+# Not needed to build, test or run
+.git/
+.github/
+.task/
+docs/
+playground/
 README.md
+Taskfile.yml
+flake.nix
+flake.lock
 Dockerfile
+docker-compose.yml
 .dockerignore

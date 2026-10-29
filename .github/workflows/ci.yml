@@ -1,4 +1,4 @@
-name: production
+name: ci
 
 on:
   push:
@@ -6,12 +6,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: production-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    working-directory: production
 
 jobs:
   # Lint, audit, test and build run in parallel.
@@ -20,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-production
+      - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm type-check
@@ -30,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-production
+      - uses: ./.github/actions/setup
       - run: pnpm audit --audit-level moderate
 
   test:
@@ -38,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-production
+      - uses: ./.github/actions/setup
       - run: pnpm test
 
   build:
@@ -46,10 +42,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/setup-production
+      - uses: ./.github/actions/setup
       - run: pnpm build
 
-#   # Docker image: disabled for now. Uncomment to build it after the four checks
+  # Docker image: disabled for now. Uncomment to build it after the four checks
   # (and publish it to GHCR on pushes to main).
   # image:
   #     name: Docker image
@@ -60,9 +56,9 @@ jobs:
   #       packages: write
   #     steps:
   #       - uses: actions/checkout@v5
-  # 
+  #
   #       - uses: docker/setup-buildx-action@v3
-  # 
+  #
   #       - uses: docker/metadata-action@v5
   #         id: meta
   #         with:
@@ -70,7 +66,7 @@ jobs:
   #           tags: |
   #             type=sha
   #             type=raw,value=latest,enable={{is_default_branch}}
-  # 
+  #
   #       # Pull requests only build the image; pushes to main also publish it.
   #       - if: github.event_name != 'pull_request'
   #         uses: docker/login-action@v3
@@ -78,10 +74,10 @@ jobs:
   #           registry: ghcr.io
   #           username: ${{ github.actor }}
   #           password: ${{ secrets.GITHUB_TOKEN }}
-  # 
+  #
   #       - uses: docker/build-push-action@v6
   #         with:
-  #           context: production
+  #           context: .
   #           push: ${{ github.event_name != 'pull_request' }}
   #           tags: ${{ steps.meta.outputs.tags }}
   #           labels: ${{ steps.meta.outputs.labels }}

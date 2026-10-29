@@ -1,8 +1,8 @@
 # Playground
 
-**Not the submission.** The same app as [`../production`](../production) with
+**Not the submission.** The same app as the [submission at the repo root](..) with
 tooling I built to _see_ Inngest work. Setup is identical; run it with
-`task dev:playground` from the repo root. Tests live only in `production/`.
+`task dev:playground` from the repo root. Tests live only in the root app.
 
 ## What's added
 

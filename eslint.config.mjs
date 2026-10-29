@@ -7,7 +7,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
-  globalIgnores(['.next/**', 'next-env.d.ts']),
+  globalIgnores(['.next/**', 'next-env.d.ts', 'playground/**']),
   {
     plugins: { 'simple-import-sort': simpleImportSort },
     rules: {
